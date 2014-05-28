@@ -8,6 +8,7 @@ if [ -z "$1" ]; then
 fi
 
 VER=$1
+RELDIR=`pwd`/Release
 NOW=`date +%Y-%m-%d`
 
 echo "Version: $VER - $NOW"
@@ -17,6 +18,8 @@ DATEh=`head -n 3 hostapd/ChangeLog | tail -n 1 | sed "s/ .*//"`
 if [ "$DATEh" != "$NOW" ]; then
     echo "NOTE! Date mismatch in ChangeLog: hostapd $DATEh != $NOW"
 fi
+
+mkdir -p $RELDIR
 
 git archive --format=tar --prefix=hostapd-$VER/ HEAD \
 	README COPYING src hostapd |
