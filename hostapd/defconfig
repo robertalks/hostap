@@ -10,7 +10,8 @@
 # to override previous values of the variables.
 
 # Driver interface for Host AP driver
-CONFIG_DRIVER_HOSTAP=y
+#CONFIG_DRIVER_HOSTAP=y
+CONFIG_DRIVER_RTW=y
 
 # Driver interface for wired authenticator
 #CONFIG_DRIVER_WIRED=y
@@ -20,7 +21,7 @@ CONFIG_DRIVER_HOSTAP=y
 #CFLAGS += -I../../madwifi # change to the madwifi source directory
 
 # Driver interface for drivers using the nl80211 kernel interface
-CONFIG_DRIVER_NL80211=y
+#CONFIG_DRIVER_NL80211=y
 
 # driver_nl80211.c requires libnl. If you are compiling it yourself
 # you may need to point hostapd to your version of libnl.
@@ -46,7 +47,7 @@ CONFIG_DRIVER_NL80211=y
 #CONFIG_DRIVER_NONE=y
 
 # IEEE 802.11F/IAPP
-CONFIG_IAPP=y
+#CONFIG_IAPP=y
 
 # WPA2/IEEE 802.11i RSN pre-authentication
 CONFIG_RSN_PREAUTH=y
@@ -112,7 +113,7 @@ CONFIG_EAP_TTLS=y
 #CONFIG_EAP_FAST=y
 
 # Wi-Fi Protected Setup (WPS)
-#CONFIG_WPS=y
+CONFIG_WPS=y
 # Enable UPnP support for external WPS Registrars
 #CONFIG_WPS_UPNP=y
 # Enable WPS support with NFC config method
@@ -146,7 +147,7 @@ CONFIG_IPV6=y
 #CONFIG_DRIVER_RADIUS_ACL=y
 
 # IEEE 802.11n (High Throughput) support
-#CONFIG_IEEE80211N=y
+CONFIG_IEEE80211N=y
 
 # Wireless Network Management (IEEE Std 802.11v-2011)
 # Note: This is experimental and not complete implementation.
@@ -246,7 +247,7 @@ CONFIG_IPV6=y
 # gnutls = GnuTLS
 # internal = Internal TLSv1 implementation (experimental)
 # none = Empty template
-#CONFIG_TLS=openssl
+CONFIG_TLS=internal
 
 # TLS-based EAP methods require at least TLS v1.0. Newer version of TLS (v1.1)
 # can be enabled to get a stronger construction of messages when block ciphers
