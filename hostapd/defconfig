@@ -262,7 +262,7 @@ CONFIG_TLS=internal
 # needed for LibTomMath. Alternatively, an integrated, minimal version of
 # LibTomMath can be used. See beginning of libtommath.c for details on benefits
 # and drawbacks of this option.
-#CONFIG_INTERNAL_LIBTOMMATH=y
+CONFIG_INTERNAL_LIBTOMMATH=y
 #ifndef CONFIG_INTERNAL_LIBTOMMATH
 #LTM_PATH=/usr/src/libtommath-0.39
 #CFLAGS += -I$(LTM_PATH)
