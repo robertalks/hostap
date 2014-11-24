@@ -3,7 +3,7 @@ CC=gcc
 endif
 
 ifndef CFLAGS
-CFLAGS = -MMD -O2 -Wall -g
+CFLAGS = -MMD -O2 -fPIC -pipe -fomit-frame-pointer
 endif
 
 CFLAGS += -I$(abspath ../src)
@@ -902,8 +902,9 @@ verify_config:
 	fi
 
 install: all
-	mkdir -p $(DESTDIR)/usr/local/bin
-	for i in $(ALL); do cp -f $$i $(DESTDIR)/usr/local/bin/$$i; done
+	mkdir -p $(DESTDIR)/opt/hostapd/{sbin,bin} 2>/dev/null
+	cp -f hostapd $(DESTDIR)/opt/hostapd/sbin/hostapd2
+	cp -f hostapd_cli $(DESTDIR)/opt/hostapd/bin/hostapd2_cli
 
 ../src/drivers/build.hostapd:
 	@if [ -f ../src/drivers/build.wpa_supplicant ]; then \
