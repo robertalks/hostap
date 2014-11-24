@@ -10,6 +10,7 @@
 
 #include "common.h"
 #include "common/ieee802_11_defs.h"
+#include "common/wpa_ctrl.h"
 #include "p2p_i.h"
 #include "p2p.h"
 
@@ -44,6 +45,9 @@ static struct wpabuf * p2p_build_invitation_req(struct p2p_data *p2p,
 	if (wfd_ie)
 		extra = wpabuf_len(wfd_ie);
 #endif /* CONFIG_WIFI_DISPLAY */
+
+	if (p2p->vendor_elem && p2p->vendor_elem[VENDOR_ELEM_P2P_INV_REQ])
+		extra += wpabuf_len(p2p->vendor_elem[VENDOR_ELEM_P2P_INV_REQ]);
 
 	buf = wpabuf_alloc(1000 + extra);
 	if (buf == NULL)
@@ -85,6 +89,9 @@ static struct wpabuf * p2p_build_invitation_req(struct p2p_data *p2p,
 	if (wfd_ie)
 		wpabuf_put_buf(buf, wfd_ie);
 #endif /* CONFIG_WIFI_DISPLAY */
+
+	if (p2p->vendor_elem && p2p->vendor_elem[VENDOR_ELEM_P2P_INV_REQ])
+		wpabuf_put_buf(buf, p2p->vendor_elem[VENDOR_ELEM_P2P_INV_REQ]);
 
 	if (dev_pw_id >= 0) {
 		/* WSC IE in Invitation Request for NFC static handover */
@@ -227,8 +234,11 @@ void p2p_process_invitation_req(struct p2p_data *p2p, const u8 *sa,
 		goto fail;
 	}
 
+	p2p_channels_dump(p2p, "own channels", &p2p->cfg->channels);
+	p2p_channels_dump(p2p, "peer channels", &dev->channels);
 	p2p_channels_intersect(&p2p->cfg->channels, &dev->channels,
 			       &intersection);
+	p2p_channels_dump(p2p, "intersection", &intersection);
 
 	if (p2p->cfg->invitation_process) {
 		status = p2p->cfg->invitation_process(

@@ -113,6 +113,10 @@ static u8 * hostapd_eid_pwr_constraint(struct hostapd_data *hapd, u8 *eid)
 	    hapd->iface->current_mode->mode != HOSTAPD_MODE_IEEE80211A)
 		return eid;
 
+	/* Let host drivers add this IE if DFS support is offloaded */
+	if (hapd->iface->drv_flags & WPA_DRIVER_FLAGS_DFS_OFFLOAD)
+		return eid;
+
 	/*
 	 * There is no DFS support and power constraint was not directly
 	 * requested by config option.
@@ -220,7 +224,7 @@ static u8 * hostapd_eid_country(struct hostapd_data *hapd, u8 *eid,
 			continue; /* can use same entry */
 		}
 
-		if (start) {
+		if (start && prev) {
 			pos = hostapd_eid_country_add(pos, end, chan_spacing,
 						      start, prev);
 			start = NULL;
@@ -265,18 +269,18 @@ static u8 * hostapd_eid_csa(struct hostapd_data *hapd, u8 *eid)
 {
 	u8 chan;
 
-	if (!hapd->iface->cs_freq_params.freq)
+	if (!hapd->cs_freq_params.freq)
 		return eid;
 
-	if (ieee80211_freq_to_chan(hapd->iface->cs_freq_params.freq, &chan) ==
+	if (ieee80211_freq_to_chan(hapd->cs_freq_params.freq, &chan) ==
 	    NUM_HOSTAPD_MODES)
 		return eid;
 
 	*eid++ = WLAN_EID_CHANNEL_SWITCH;
 	*eid++ = 3;
-	*eid++ = hapd->iface->cs_block_tx;
+	*eid++ = hapd->cs_block_tx;
 	*eid++ = chan;
-	*eid++ = hapd->iface->cs_count;
+	*eid++ = hapd->cs_count;
 
 	return eid;
 }
@@ -286,12 +290,12 @@ static u8 * hostapd_eid_secondary_channel(struct hostapd_data *hapd, u8 *eid)
 {
 	u8 sec_ch;
 
-	if (!hapd->iface->cs_freq_params.sec_channel_offset)
+	if (!hapd->cs_freq_params.sec_channel_offset)
 		return eid;
 
-	if (hapd->iface->cs_freq_params.sec_channel_offset == -1)
+	if (hapd->cs_freq_params.sec_channel_offset == -1)
 		sec_ch = HT_INFO_HT_PARAM_SECONDARY_CHNL_BELOW;
-	else if (hapd->iface->cs_freq_params.sec_channel_offset == 1)
+	else if (hapd->cs_freq_params.sec_channel_offset == 1)
 		sec_ch = HT_INFO_HT_PARAM_SECONDARY_CHNL_ABOVE;
 	else
 		return eid;
@@ -409,7 +413,7 @@ static u8 * hostapd_gen_probe_resp(struct hostapd_data *hapd,
 	pos = hostapd_eid_roaming_consortium(hapd, pos);
 
 	pos = hostapd_add_csa_elems(hapd, pos, (u8 *)resp,
-				    &hapd->iface->cs_c_off_proberesp);
+				    &hapd->cs_c_off_proberesp);
 #ifdef CONFIG_IEEE80211AC
 	pos = hostapd_eid_vht_capabilities(hapd, pos);
 	pos = hostapd_eid_vht_operation(hapd, pos);
@@ -810,6 +814,10 @@ int ieee802_11_build_ap_params(struct hostapd_data *hapd,
 #ifdef CONFIG_IEEE80211N
 	tailpos = hostapd_eid_ht_capabilities(hapd, tailpos);
 	tailpos = hostapd_eid_ht_operation(hapd, tailpos);
+
+	// DRIVER_RTW ADD
+	if(hapd->iconf->ieee80211n)
+		hapd->conf->wmm_enabled = 1;
 #endif /* CONFIG_IEEE80211N */
 
 	tailpos = hostapd_eid_ext_capab(hapd, tailpos);
@@ -824,7 +832,7 @@ int ieee802_11_build_ap_params(struct hostapd_data *hapd,
 	tailpos = hostapd_eid_adv_proto(hapd, tailpos);
 	tailpos = hostapd_eid_roaming_consortium(hapd, tailpos);
 	tailpos = hostapd_add_csa_elems(hapd, tailpos, tail,
-					&hapd->iface->cs_c_off_beacon);
+					&hapd->cs_c_off_beacon);
 #ifdef CONFIG_IEEE80211AC
 	tailpos = hostapd_eid_vht_capabilities(hapd, tailpos);
 	tailpos = hostapd_eid_vht_operation(hapd, tailpos);
@@ -882,8 +890,8 @@ int ieee802_11_build_ap_params(struct hostapd_data *hapd,
 	params->basic_rates = hapd->iface->basic_rates;
 	params->ssid = hapd->conf->ssid.ssid;
 	params->ssid_len = hapd->conf->ssid.ssid_len;
-	params->pairwise_ciphers = hapd->conf->rsn_pairwise ?
-		hapd->conf->rsn_pairwise : hapd->conf->wpa_pairwise;
+	params->pairwise_ciphers = hapd->conf->wpa_pairwise |
+		hapd->conf->rsn_pairwise;
 	params->group_cipher = hapd->conf->wpa_group;
 	params->key_mgmt_suites = hapd->conf->wpa_key_mgmt;
 	params->auth_algs = hapd->conf->auth_algs;
@@ -957,7 +965,7 @@ int ieee802_11_set_beacon(struct hostapd_data *hapd)
 	struct wpabuf *beacon, *proberesp, *assocresp;
 	int res, ret = -1;
 
-	if (hapd->iface->csa_in_progress) {
+	if (hapd->csa_in_progress) {
 		wpa_printf(MSG_ERROR, "Cannot set beacons during CSA period");
 		return -1;
 	}

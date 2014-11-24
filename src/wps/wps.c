@@ -89,7 +89,7 @@ struct wps_data * wps_init(const struct wps_config *cfg)
 	if (cfg->pbc) {
 		/* Use special PIN '00000000' for PBC */
 		data->dev_pw_id = DEV_PW_PUSHBUTTON;
-		os_free(data->dev_password);
+		bin_clear_free(data->dev_password, data->dev_password_len);
 		data->dev_password = (u8 *) os_strdup("00000000");
 		if (data->dev_password == NULL) {
 			os_free(data);
@@ -122,7 +122,8 @@ struct wps_data * wps_init(const struct wps_config *cfg)
 		data->new_ap_settings =
 			os_malloc(sizeof(*data->new_ap_settings));
 		if (data->new_ap_settings == NULL) {
-			os_free(data->dev_password);
+			bin_clear_free(data->dev_password,
+				       data->dev_password_len);
 			os_free(data);
 			return NULL;
 		}
@@ -173,11 +174,11 @@ void wps_deinit(struct wps_data *data)
 	wpabuf_free(data->dh_pubkey_e);
 	wpabuf_free(data->dh_pubkey_r);
 	wpabuf_free(data->last_msg);
-	os_free(data->dev_password);
-	os_free(data->alt_dev_password);
-	os_free(data->new_psk);
+	bin_clear_free(data->dev_password, data->dev_password_len);
+	bin_clear_free(data->alt_dev_password, data->alt_dev_password_len);
+	bin_clear_free(data->new_psk, data->new_psk_len);
 	wps_device_data_free(&data->peer_dev);
-	os_free(data->new_ap_settings);
+	bin_clear_free(data->new_ap_settings, sizeof(*data->new_ap_settings));
 	dh5_free(data->dh_ctx);
 	os_free(data);
 }
@@ -320,11 +321,16 @@ int wps_is_addr_authorized(const struct wpabuf *msg, const u8 *addr,
 	if (wps_parse_msg(msg, &attr) < 0)
 		return 0;
 
+       return is_selected_pin_registrar(&attr);
+//     Marked by Albert 2011/11/17
+//     Some APs won't carry the AuthorizedMACs in the probe response.
+//     So, skip this check will speed up the process to find the current AP out for WPS handshake.
+/*     
+
 	if (!attr.version2 && ver1_compat) {
 		/*
 		 * Version 1.0 AP - AuthorizedMACs not used, so revert back to
 		 * old mechanism of using SelectedRegistrar.
-		 */
 		return is_selected_pin_registrar(&attr);
 	}
 
@@ -341,6 +347,7 @@ int wps_is_addr_authorized(const struct wpabuf *msg, const u8 *addr,
 	}
 
 	return 0;
+*/
 }
 
 

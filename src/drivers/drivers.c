@@ -98,7 +98,7 @@ struct wpa_driver_ops *wpa_drivers[] =
 	&wpa_driver_none_ops,
 #endif /* CONFIG_DRIVER_NONE */
 #ifdef CONFIG_DRIVER_RTW
-        &wpa_driver_rtw_ops,
+	&wpa_driver_rtw_ops,
 #endif /* CONFIG_DRIVER_RTW */
 	NULL
 };

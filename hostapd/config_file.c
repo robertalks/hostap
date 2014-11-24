@@ -3175,7 +3175,6 @@ static int hostapd_config_fill(struct hostapd_config *conf,
 struct hostapd_config * hostapd_config_read(const char *fname)
 {
 	struct hostapd_config *conf;
-	struct hostapd_bss_config *bss;
 	FILE *f;
 	char buf[512], *pos;
 	int line = 0;
@@ -3204,9 +3203,11 @@ struct hostapd_config * hostapd_config_read(const char *fname)
 		return NULL;
 	}
 
-	bss = conf->last_bss = conf->bss[0];
+	conf->last_bss = conf->bss[0];
 
 	while (fgets(buf, sizeof(buf), f)) {
+		struct hostapd_bss_config *bss;
+
 		bss = conf->last_bss;
 		line++;
 
@@ -3238,7 +3239,7 @@ struct hostapd_config * hostapd_config_read(const char *fname)
 	fclose(f);
 
 	for (i = 0; i < conf->num_bss; i++)
-		hostapd_set_security_params(conf->bss[i]);
+		hostapd_set_security_params(conf->bss[i], 1);
 
 	if (hostapd_config_check(conf, 1))
 		errors++;
@@ -3270,7 +3271,7 @@ int hostapd_set_iface(struct hostapd_config *conf,
 	}
 
 	for (i = 0; i < conf->num_bss; i++)
-		hostapd_set_security_params(conf->bss[i]);
+		hostapd_set_security_params(conf->bss[i], 0);
 
 	if (hostapd_config_check(conf, 0)) {
 		wpa_printf(MSG_ERROR, "Configuration check failed");

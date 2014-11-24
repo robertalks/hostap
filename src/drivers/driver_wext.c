@@ -990,6 +990,37 @@ void wpa_driver_wext_scan_timeout(void *eloop_ctx, void *timeout_ctx)
 	wpa_supplicant_event(timeout_ctx, EVENT_SCAN_RESULTS, NULL);
 }
 
+// added for wps2.0 @20110519
+static int wpa_driver_wext_set_probe_req_ie(struct wpa_driver_wext_data *drv, const u8 *extra_ies,
+                               size_t extra_ies_len)
+{
+       unsigned char *pbuf;
+       struct iwreq iwr;       
+       int ret = 0;
+
+       pbuf = os_malloc(extra_ies_len);
+       os_memset(pbuf, 0, extra_ies_len);
+
+       os_memset(&iwr, 0, sizeof(iwr));
+       os_strlcpy(iwr.ifr_name, drv->ifname, IFNAMSIZ);
+
+       os_memcpy(pbuf, extra_ies, extra_ies_len);
+
+       iwr.u.data.pointer = (caddr_t)pbuf;
+       iwr.u.data.length = extra_ies_len;
+       iwr.u.data.flags = 0x8766;//magic number
+
+       if (ioctl(drv->ioctl_sock, SIOCSIWPRIV, &iwr) < 0) {
+               perror("ioctl[SIOCSIWMLME]");
+               ret = -1;
+       }
+
+       if(pbuf)
+               os_free(pbuf);
+
+       return ret;
+
+}
 
 /**
  * wpa_driver_wext_scan - Request the driver to initiate scan
@@ -1011,6 +1042,10 @@ int wpa_driver_wext_scan(void *priv, struct wpa_driver_scan_params *params)
 			   __FUNCTION__, (unsigned long) ssid_len);
 		return -1;
 	}
+
+        // added for wps2.0 @20110519
+        wpa_driver_wext_set_probe_req_ie(drv, params->extra_ies,
+                               params->extra_ies_len);
 
 	os_memset(&iwr, 0, sizeof(iwr));
 	os_strlcpy(iwr.ifr_name, drv->ifname, IFNAMSIZ);
@@ -2027,7 +2062,11 @@ int wpa_driver_wext_associate(void *priv,
 		 * Stop cfg80211 from trying to associate before we are done
 		 * with all parameters.
 		 */
-		wpa_driver_wext_set_ssid(drv, (u8 *) "", 0);
+		if (wpa_driver_wext_set_ssid(drv, (u8 *) "", 0) < 0) {
+			wpa_printf(MSG_DEBUG,
+				   "WEXT: Failed to clear SSID to stop pending cfg80211 association attempts (if any)");
+			/* continue anyway */
+		}
 	}
 
 	if (wpa_driver_wext_set_drop_unencrypted(drv, params->drop_unencrypted)
@@ -2115,7 +2154,8 @@ int wpa_driver_wext_associate(void *priv,
 	if (wpa_driver_wext_set_auth_param(drv, IW_AUTH_MFP, value) < 0)
 		ret = -1;
 #endif /* CONFIG_IEEE80211W */
-	if (params->freq && wpa_driver_wext_set_freq(drv, params->freq) < 0)
+	if (params->freq.freq &&
+	    wpa_driver_wext_set_freq(drv, params->freq.freq) < 0)
 		ret = -1;
 	if (!drv->cfg80211 &&
 	    wpa_driver_wext_set_ssid(drv, params->ssid, params->ssid_len) < 0)
@@ -2315,6 +2355,59 @@ static const char * wext_get_radio_name(void *priv)
 	return drv->phyname;
 }
 
+// Aries 20120120,  append rssi information at the end of "status" command
+int wext_signal_poll(void *priv, struct wpa_signal_info *signal_info)
+{
+       struct wpa_driver_wext_data *drv = priv;
+       struct iwreq iwr;
+       struct iw_statistics stat;
+       int ret = 0;
+
+       os_memset(&iwr, 0, sizeof(iwr));
+       os_memset(&stat, 0, sizeof(stat));
+       os_strlcpy(iwr.ifr_name, drv->ifname, IFNAMSIZ);
+       iwr.u.data.pointer = (caddr_t) &stat;
+       iwr.u.data.length = sizeof(struct iw_statistics);
+       iwr.u.data.flags = 1;
+       if (ioctl(drv->ioctl_sock, SIOCGIWSTATS, &iwr) < 0) {
+               perror("ioctl[SIOCGIWSTATS] fail\n");
+               ret = -1;
+       }
+       signal_info->current_signal = stat.qual.level;
+       signal_info->current_noise = stat.qual.noise;
+       return ret;
+}
+
+static int wpa_driver_wext_signal_poll(void *priv, struct wpa_signal_info *si)
+{
+	struct wpa_driver_wext_data *drv = priv;
+	struct iw_statistics stats;
+	struct iwreq iwr;
+
+	os_memset(si, 0, sizeof(*si));
+	si->current_signal = -9999;
+	si->current_noise = 9999;
+	si->chanwidth = CHAN_WIDTH_UNKNOWN;
+
+	os_memset(&iwr, 0, sizeof(iwr));
+	os_strlcpy(iwr.ifr_name, drv->ifname, IFNAMSIZ);
+	iwr.u.data.pointer = (caddr_t) &stats;
+	iwr.u.data.length = sizeof(stats);
+	iwr.u.data.flags = 1;
+
+	if (ioctl(drv->ioctl_sock, SIOCGIWSTATS, &iwr) < 0) {
+		wpa_printf(MSG_ERROR, "WEXT: SIOCGIWSTATS: %s",
+			   strerror(errno));
+		return -1;
+	}
+
+	si->current_signal = stats.qual.level -
+		((stats.qual.updated & IW_QUAL_DBM) ? 0x100 : 0);
+	si->current_noise = stats.qual.noise -
+		((stats.qual.updated & IW_QUAL_DBM) ? 0x100 : 0);
+	return 0;
+}
+
 
 const struct wpa_driver_ops wpa_driver_wext_ops = {
 	.name = "wext",
@@ -2335,4 +2428,9 @@ const struct wpa_driver_ops wpa_driver_wext_ops = {
 	.get_capa = wpa_driver_wext_get_capa,
 	.set_operstate = wpa_driver_wext_set_operstate,
 	.get_radio_name = wext_get_radio_name,
+#ifdef CONFIG_DRIVER_RTW
+	.signal_poll = wext_signal_poll,
+#else
+	.signal_poll = wpa_driver_wext_signal_poll,
+#endif /* CONFIG_DRIVER_RTW */
 };

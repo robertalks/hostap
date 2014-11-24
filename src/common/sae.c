@@ -134,8 +134,10 @@ static struct crypto_bignum * sae_get_rand(struct sae_data *sae)
 			return NULL;
 		if (crypto_bignum_is_zero(bn) ||
 		    crypto_bignum_is_one(bn) ||
-		    crypto_bignum_cmp(bn, sae->tmp->order) >= 0)
+		    crypto_bignum_cmp(bn, sae->tmp->order) >= 0) {
+			crypto_bignum_deinit(bn, 0);
 			continue;
+		}
 		break;
 	}
 
@@ -1049,7 +1051,7 @@ int sae_check_confirm(struct sae_data *sae, const u8 *data, size_t len)
 				   sae->tmp->own_commit_element_ffc,
 				   verifier);
 
-	if (os_memcmp(verifier, data + 2, SHA256_MAC_LEN) != 0) {
+	if (os_memcmp_const(verifier, data + 2, SHA256_MAC_LEN) != 0) {
 		wpa_printf(MSG_DEBUG, "SAE: Confirm mismatch");
 		wpa_hexdump(MSG_DEBUG, "SAE: Received confirm",
 			    data + 2, SHA256_MAC_LEN);
