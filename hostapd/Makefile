@@ -902,9 +902,12 @@ verify_config:
 	fi
 
 install: all
-	mkdir -p $(DESTDIR)/opt/hostapd/{sbin,bin} 2>/dev/null
-	cp -f hostapd $(DESTDIR)/opt/hostapd/sbin/hostapd2
-	cp -f hostapd_cli $(DESTDIR)/opt/hostapd/bin/hostapd2_cli
+	/bin/mkdir -p $(DESTDIR)/opt/hostapd/{sbin,bin} 2>/dev/null
+	/bin/cp -f hostapd $(DESTDIR)/opt/hostapd/sbin/hostapd2
+	/bin/cp -f hostapd_cli $(DESTDIR)/opt/hostapd/bin/hostapd2_cli
+	/usr/bin/strip --strip-unneeded \
+	$(DESTDIR)/opt/hostapd/sbin/hostapd2 \
+	$(DESTDIR)/opt/hostapd/bin/hostapd2_cli
 
 ../src/drivers/build.hostapd:
 	@if [ -f ../src/drivers/build.wpa_supplicant ]; then \
