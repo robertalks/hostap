@@ -902,7 +902,8 @@ verify_config:
 	fi
 
 install: all
-	/bin/mkdir -p $(DESTDIR)/opt/hostapd/{sbin,bin} 2>/dev/null
+	/bin/mkdir -p $(DESTDIR)/opt/hostapd/sbin \
+	$(DESTDIR)/opt/hostapd/bin
 	/bin/cp -f hostapd $(DESTDIR)/opt/hostapd/sbin/hostapd2
 	/bin/cp -f hostapd_cli $(DESTDIR)/opt/hostapd/bin/hostapd2_cli
 	/usr/bin/strip --strip-unneeded \
