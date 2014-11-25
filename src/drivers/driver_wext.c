@@ -2355,29 +2355,6 @@ static const char * wext_get_radio_name(void *priv)
 	return drv->phyname;
 }
 
-// Aries 20120120,  append rssi information at the end of "status" command
-int wext_signal_poll(void *priv, struct wpa_signal_info *signal_info)
-{
-       struct wpa_driver_wext_data *drv = priv;
-       struct iwreq iwr;
-       struct iw_statistics stat;
-       int ret = 0;
-
-       os_memset(&iwr, 0, sizeof(iwr));
-       os_memset(&stat, 0, sizeof(stat));
-       os_strlcpy(iwr.ifr_name, drv->ifname, IFNAMSIZ);
-       iwr.u.data.pointer = (caddr_t) &stat;
-       iwr.u.data.length = sizeof(struct iw_statistics);
-       iwr.u.data.flags = 1;
-       if (ioctl(drv->ioctl_sock, SIOCGIWSTATS, &iwr) < 0) {
-               perror("ioctl[SIOCGIWSTATS] fail\n");
-               ret = -1;
-       }
-       signal_info->current_signal = stat.qual.level;
-       signal_info->current_noise = stat.qual.noise;
-       return ret;
-}
-
 static int wpa_driver_wext_signal_poll(void *priv, struct wpa_signal_info *si)
 {
 	struct wpa_driver_wext_data *drv = priv;
@@ -2428,9 +2405,5 @@ const struct wpa_driver_ops wpa_driver_wext_ops = {
 	.get_capa = wpa_driver_wext_get_capa,
 	.set_operstate = wpa_driver_wext_set_operstate,
 	.get_radio_name = wext_get_radio_name,
-#ifdef CONFIG_DRIVER_RTW
-	.signal_poll = wext_signal_poll,
-#else
 	.signal_poll = wpa_driver_wext_signal_poll,
-#endif /* CONFIG_DRIVER_RTW */
 };
