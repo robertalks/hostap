@@ -1,7 +1,7 @@
 hostap for Realtek RTL8192CU
 ============================
 
-This is a latest version of hostap patches to support Realtek's own
+This is a latest version of hostap patched to support Realtek's own
 kernel module which doesn't uses nl80211.
 
 The kernel module can be found at: `https://github.com/robertalks/rt8192cu <https://github.com/robertalks/rt8192cu>`
