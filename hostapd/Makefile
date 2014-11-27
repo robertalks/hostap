@@ -6,6 +6,10 @@ ifndef CFLAGS
 CFLAGS = -MMD -O2 -fPIC -pipe -fomit-frame-pointer
 endif
 
+ifndef DESTDIR
+DESTDIR=/usr/local
+endif
+
 CFLAGS += -I$(abspath ../src)
 CFLAGS += -I$(abspath ../src/utils)
 
@@ -902,17 +906,20 @@ verify_config:
 	fi
 
 hostap2: all
-	/bin/mkdir -p $(DESTDIR)/opt/hostapd/sbin \
-	$(DESTDIR)/opt/hostapd/bin
-	/bin/cp -f hostapd $(DESTDIR)/opt/hostapd/sbin/hostapd2
-	/bin/cp -f hostapd_cli $(DESTDIR)/opt/hostapd/bin/hostapd2_cli
-	/usr/bin/strip --strip-unneeded \
-	$(DESTDIR)/opt/hostapd/sbin/hostapd2 \
-	$(DESTDIR)/opt/hostapd/bin/hostapd2_cli
+	install -d /opt/hostapd/sbin
+	install -m 755 hostapd /opt/hostapd/sbin/hostapd2
+	install -d /opt/hostapd/bin
+	install -m 755 hostapd_cli /opt/hostapd/bin/hostapd2_cli
+	strip --strip-unneeded \
+	/opt/hostapd/sbin/hostapd2 /opt/hostapd/bin/hostapd2_cli
 
 install: all
-	mkdir -p $(DESTDIR)/usr/local/bin
-	for i in $(ALL); do cp -f $$i $(DESTDIR)/usr/local/bin/$$i; done
+	install -d $(DESTDIR)/bin
+	for i in $(ALL); do install -m 755 $$i $(DESTDIR)/bin/$$i; done
+	install -d $(DESTDIR)/man/man8
+	gzip -c -9 hostapd.8 > $(DESTDIR)/man/man8/hostapd.8.gz
+	install -d $(DESTDIR)/man/man1
+	gzip -c -9 hostapd_cli.1 > $(DESTDIR)/man/man1/hostapd_cli.1.gz
 
 ../src/drivers/build.hostapd:
 	@if [ -f ../src/drivers/build.wpa_supplicant ]; then \
