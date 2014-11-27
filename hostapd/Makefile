@@ -901,7 +901,7 @@ verify_config:
 		exit 1; \
 	fi
 
-install: all
+hostap2:
 	/bin/mkdir -p $(DESTDIR)/opt/hostapd/sbin \
 	$(DESTDIR)/opt/hostapd/bin
 	/bin/cp -f hostapd $(DESTDIR)/opt/hostapd/sbin/hostapd2
@@ -909,6 +909,10 @@ install: all
 	/usr/bin/strip --strip-unneeded \
 	$(DESTDIR)/opt/hostapd/sbin/hostapd2 \
 	$(DESTDIR)/opt/hostapd/bin/hostapd2_cli
+
+install: all
+	mkdir -p $(DESTDIR)/usr/local/bin
+	for i in $(ALL); do cp -f $$i $(DESTDIR)/usr/local/bin/$$i; done
 
 ../src/drivers/build.hostapd:
 	@if [ -f ../src/drivers/build.wpa_supplicant ]; then \
