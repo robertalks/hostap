@@ -8,11 +8,11 @@ The kernel module can be found at: `https://github.com/robertalks/rt8192cu <http
 
 
 **Instructions:**
-::
-    $ git clone https://github.com/robertalks/hostap
-    $ cd hostap/hostapd
-    $ cp defconfig .config
-    $ make
-    $ make install
+
+        $ git clone https://github.com/robertalks/hostap
+        $ cd hostap/hostapd
+        $ cp defconfig .config
+        $ make
+        $ make install
 
 
