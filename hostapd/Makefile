@@ -901,7 +901,7 @@ verify_config:
 		exit 1; \
 	fi
 
-hostap2:
+hostap2: all
 	/bin/mkdir -p $(DESTDIR)/opt/hostapd/sbin \
 	$(DESTDIR)/opt/hostapd/bin
 	/bin/cp -f hostapd $(DESTDIR)/opt/hostapd/sbin/hostapd2
