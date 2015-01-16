@@ -1,11 +1,8 @@
-
 #ifndef _DRIVER_RTL_H_
 #define _DRIVER_RTL_H_
 
-
-#define RTL_IOCTL_HOSTAPD (SIOCIWFIRSTPRIV + 28)
-
-#define	IEEE_CRYPT_ALG_NAME_LEN (16)
+#define RTL_IOCTL_HOSTAPD 		(SIOCIWFIRSTPRIV + 28)
+#define	IEEE_CRYPT_ALG_NAME_LEN 	(16)
 
 /* RTL871X_IOCTL_HOSTAPD ioctl() cmd: */
 enum {
@@ -13,7 +10,6 @@ enum {
 	RTL871X_HOSTAPD_ADD_STA = 2,
 	RTL871X_HOSTAPD_REMOVE_STA = 3,
 	RTL871X_HOSTAPD_GET_INFO_STA = 4,
-	/* REMOVED: PRISM2_HOSTAPD_RESET_TXEXC_STA = 5, */
 	RTL871X_HOSTAPD_GET_WPAIE_STA = 5,
 	RTL871X_SET_ENCRYPTION = 6,
 	RTL871X_GET_ENCRYPTION = 7,
@@ -63,19 +59,16 @@ typedef struct ieee_param {
 			u16 capability;
 			int flags;
 			u8 tx_supp_rates[16];			
-			//struct ieee80211_ht_capability ht_cap;
 			struct ieee80211_ht_capabilities ht_cap;
 		} add_sta;
 		struct {
-			u8	reserved[2];//for set max_num_sta
+			u8	reserved[2]; /* for set max_num_sta */
 			u8	buf[0];
 		} bcn_ie;
 
 	} u;
 	   
 } ieee_param;
-	   
-
 
 #define IEEE80211_CCK_RATE_LEN  		4
 #define IEEE80211_OFDM_RATE_LEN 		8
@@ -111,4 +104,3 @@ typedef struct ieee_param {
 #define IEEE80211_OFDM_RATES_MASK		0x00000FF0
 
 #endif
-

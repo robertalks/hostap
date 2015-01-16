@@ -1,0 +1,24 @@
+#!/bin/sh -e
+
+nocpu=$(grep -c MHz /proc/cpuinfo 2>/dev/null || echo 1)
+
+if [ ! -e .config ]; then
+	cp -f defconfig .config
+fi
+
+if [ -x hostapd ]; then
+	echo "Pre-Cleaning ..."
+	make clean >/dev/null 2>&1
+fi
+
+echo "Running test build, please wait ..."
+if make -j$nocpu >/dev/null 2>&1; then
+	echo "Build successful..."
+else
+	echo "Test building failed."
+fi
+
+echo "Cleaning ..."
+make clean >/dev/null 2>&1
+echo "Removing .config ..."
+rm -f .config >/dev/null 2>&1
