@@ -10,7 +10,9 @@
 # to override previous values of the variables.
 
 # Driver interface for Host AP driver
-#CONFIG_DRIVER_HOSTAP=y
+CONFIG_DRIVER_HOSTAP=y
+
+# Driver interface for Realtek rtl871xdrv drivers
 CONFIG_DRIVER_RTW=y
 
 # Driver interface for wired authenticator
@@ -21,7 +23,7 @@ CONFIG_DRIVER_RTW=y
 #CFLAGS += -I../../madwifi # change to the madwifi source directory
 
 # Driver interface for drivers using the nl80211 kernel interface
-#CONFIG_DRIVER_NL80211=y
+CONFIG_DRIVER_NL80211=y
 
 # driver_nl80211.c requires libnl. If you are compiling it yourself
 # you may need to point hostapd to your version of libnl.
